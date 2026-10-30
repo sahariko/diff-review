@@ -28,4 +28,21 @@
   if (toggle) toggle.addEventListener("change", function () {
     document.querySelectorAll('details[data-quiet="1"]').forEach(function (d) { d.open = toggle.checked; });
   });
+  // Highlight the contents link for whatever is at the top of the screen.
+  var spy = Array.prototype.slice.call(document.querySelectorAll("#guide, #visual, #files, details.file"));
+  var links = document.querySelectorAll(".toc a");
+  var ticking = false;
+  function mark() {
+    ticking = false;
+    var cur = null;
+    spy.forEach(function (el) { if (el.getBoundingClientRect().top <= window.innerHeight * 0.5) cur = el; });
+    var id = cur && cur.id;
+    links.forEach(function (a) {
+      var t = a.getAttribute("data-spy") || a.getAttribute("data-target");
+      a.classList.toggle("active", t === id);
+      if (t === id) a.setAttribute("aria-current", "location"); else a.removeAttribute("aria-current");
+    });
+  }
+  window.addEventListener("scroll", function () { if (!ticking) { ticking = true; requestAnimationFrame(mark); } }, { passive: true });
+  mark();
 })();

@@ -6,7 +6,8 @@ Terminal diffs are hard to read on a small screen, and most review tools need a 
 
 - **A guide to the change.** A short plain-language summary, a "look closely" list ranked by risk with links that jump to the exact line, and a "safe to skim" list.
 - **Before/after screenshots** when the diff changes how something looks.
-- **The diff itself**: one column with wrapped lines on a phone, side by side on a wide screen, with a contents row and collapsible files.
+- **The diff itself**: one column with wrapped lines on a phone, side by side on a wide screen, with collapsible files.
+- **Navigation**: a sticky contents sidebar on wide screens (sections and files, with the current one highlighted), and a row of jump links on a phone.
 
 <p align="center">
   <img src="docs/screenshots/phone-guide.png" width="260" alt="Phone: contents row, summary and risk-ranked list">

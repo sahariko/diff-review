@@ -206,7 +206,15 @@ else:
 
 guide_h, shots_h = notes_html(), shots_html()
 sections_toc = ([("guide", "What to know")] if guide_h else []) + ([("visual", "Visual changes")] if shots_h else []) + [("files", f"Files ({len(files)})")]
-toc_html = '<nav class="toc" aria-label="Contents">' + "".join(f'<a href="#{i}">{e(t)}</a>' for i, t in sections_toc) + "</nav>"
+def side_file(i, f):
+    d, _, name = f["path"].rpartition("/")
+    return (f'<a href="#f{i}" data-target="f{i}" title="{e(f["path"])}"><span>{e(name)}</span>'
+            f'<span class="stat"><i class="a">+{f["add"]}</i> <i class="d">−{f["del"]}</i></span></a>')
+
+
+toc_html = ('<aside class="toc"><nav aria-label="Contents">'
+            + "".join(f'<a href="#{i}" data-spy="{i}">{e(t)}</a>' for i, t in sections_toc)
+            + '<div class="toc-files">' + "".join(side_file(i, f) for i, f in enumerate(files)) + "</div></nav></aside>")
 
 CSS = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "diff.css")).read()
 JS = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "diff.js")).read()
@@ -215,16 +223,19 @@ page = f"""<title>Diff Review</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;600&display=swap">
 <style>{CSS}</style>
-<main>
+<div class="layout">
 <header>{title_html}
 <div class="totals">{len(files)} files · <span class="a">+{total_add}</span> <span class="d">−{total_del}</span>
 <label class="toggle"><input type="checkbox" id="quiet-toggle"> Open tests &amp; config</label></div></header>
 {toc_html}
+<main>
+
 {guide_h}
 {shots_h}
 <section id="files"><h2>Files changed</h2><nav class="files" aria-label="Files">{toc}</nav></section>
 {sections}
 </main>
+</div>
 <script>{JS}</script>
 """
 if args.standalone:
