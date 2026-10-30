@@ -1,0 +1,18 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "diff-review",
+  "owner": {
+    "name": "Sahar Beker"
+  },
+  "plugins": [
+    {
+      "name": "diff-review",
+      "description": "Review a git diff as a readable page on your phone or desktop, with a guide to what to look at and before/after screenshots.",
+      "source": "./",
+      "category": "development"
+    }
+  ],
+  "metadata": {
+    "description": "Review git diffs as readable pages on your phone or desktop."
+  }
+}

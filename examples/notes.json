@@ -1,0 +1,11 @@
+{
+  "summary": [
+    "The brew time could be stepped below zero and without limit. It is now kept between 1 and 15 minutes, and the minus and plus buttons grey out at the limits.",
+    "The buttons also moved from flat grey boxes to rounded white pills, and Start became a solid green bar. The screenshot shows the default state."
+  ],
+  "focus": [
+    {"path": "app.js", "line": 8, "title": "Clamp replaces the unchecked add", "why": "Math.min(MAX, Math.max(MIN, ...)) keeps the value in range. Check that the initial 4 and both limits (1 and 15) behave when the buttons are tapped quickly.", "risk": "medium"},
+    {"path": "app.js", "line": 10, "title": "Disabled state is set only inside change()", "why": "On first load neither button is disabled, which is correct for 4. If the starting value ever becomes 1 or 15 the buttons would be wrong until the first tap.", "risk": "low"}
+  ],
+  "skim": ["style.css only restyles the buttons; index.html is unchanged."]
+}
