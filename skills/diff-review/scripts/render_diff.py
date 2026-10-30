@@ -98,12 +98,10 @@ def rows_for(fi, h):
     out, dels, adds = [], [], []
 
     def flush():
-        for k in range(max(len(dels), len(adds))):
-            d = dels[k] if k < len(dels) else None
-            a = adds[k] if k < len(adds) else None
-            left = cell("del", d[0], d[1]) if d else cell("empty", "", "")
-            right = cell("add", a[0], a[1], f"{fi}-L{a[0]}") if a else cell("empty", "", "")
-            out.append((left, right))
+        if dels or adds:
+            left = "".join(cell("del", d[0], d[1]) for d in dels)
+            right = "".join(cell("add", a[0], a[1], f"{fi}-L{a[0]}") for a in adds)
+            out.append((f'<div class="side">{left}</div>', f'<div class="side">{right}</div>'))
         dels.clear()
         adds.clear()
 
