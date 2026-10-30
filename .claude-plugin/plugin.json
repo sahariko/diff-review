@@ -1,6 +1,6 @@
 {
   "name": "diff-review",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Review a git diff as a readable page on your phone or desktop: a guide to what changed and what to look at, before/after screenshots for UI changes, and a responsive diff.",
   "author": { "name": "Sahar Beker" },
   "license": "MIT",
