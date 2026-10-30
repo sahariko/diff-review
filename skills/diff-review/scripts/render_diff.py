@@ -231,7 +231,8 @@ def files_section(key, label, pre, fs):
 
 
 if not commits:
-    title_html = f'<div class="sha">{e(args.range)} · no commits</div><h1>Uncommitted changes</h1>'
+    n_unc = len(files)
+    title_html = f'<h1>Uncommitted changes</h1><div class="sub">{n_unc} file{"" if n_unc == 1 else "s"}, not yet committed</div>'
 elif single:
     s, subj, au, dt = commits[0]
     title_html = f'<div class="sha">{e(s)} · {e(dt)} · {e(au)}</div><h1>{e(subj)}</h1>'
