@@ -236,6 +236,7 @@ page = f"""<title>Diff Review</title>
 {sections}
 </main>
 </div>
+<button type="button" id="to-top" class="to-top" aria-label="Back to top" hidden>↑ Top</button>
 <script>{JS}</script>
 """
 if args.standalone:

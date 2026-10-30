@@ -31,11 +31,17 @@
   // Highlight the contents link for whatever is at the top of the screen.
   var spy = Array.prototype.slice.call(document.querySelectorAll("#guide, #visual, #files, details.file"));
   var links = document.querySelectorAll(".toc a");
+  var top = document.getElementById("to-top");
+  if (top) top.addEventListener("click", function () {
+    var calm = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    window.scrollTo({ top: 0, behavior: calm ? "auto" : "smooth" });
+  });
   var ticking = false;
   function mark() {
     ticking = false;
     var cur = null;
     spy.forEach(function (el) { if (el.getBoundingClientRect().top <= window.innerHeight * 0.5) cur = el; });
+    if (top) top.hidden = window.scrollY < 500;
     var id = cur && cur.id;
     links.forEach(function (a) {
       var t = a.getAttribute("data-spy") || a.getAttribute("data-target");
