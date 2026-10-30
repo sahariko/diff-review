@@ -38,16 +38,16 @@ You need Node 18+ and Playwright. If the repo doesn't have them, the skill asks 
 /diff-review
 ```
 
-Claude reads the diff, writes the review notes, takes screenshots if the UI changed, builds the page and opens it.
+Claude reads the diff of your whole branch, writes the review notes, takes screenshots if the UI changed, builds the page and opens it.
 
 ## Usage
 
 ```
-/diff-review                              # the latest commit, opened in your browser
+/diff-review                              # the whole branch, opened in your browser
+/diff-review the last commit              # just HEAD
 /diff-review the last 3 commits           # any commit range
-/diff-review main..HEAD                   # everything on this branch
 /diff-review on my phone                  # publish a private page and open the link
-/diff-review main..HEAD, local            # keep it on this machine
+/diff-review local                        # keep it on this machine
 ```
 
 If it isn't clear where you'll read it, it opens the page locally and offers a phone link. It never publishes unless you ask for a phone view, a link or sharing.
@@ -91,31 +91,6 @@ Side-by-side diffs and a sticky contents sidebar that lists every section and fi
 A phone can't open a local file, so for the phone use remote. Remote needs a Claude Code setup with the Artifact tool.
 
 Want to see a real page? Open [`examples/brew-timer-review.html`](examples/brew-timer-review.html) in a browser.
-
-## Alternatives
-
-`diff-review` is read-only: you read the page and send feedback through the chat. If you want to click a line and leave inline comments for the agent, use [Crit](https://github.com/tomasz-tomczyk/crit). It's built for a mouse; on a phone I couldn't leave comments, which is why this plugin exists.
-
-## Documentation
-
-- [How it works](docs/how-it-works.md): the files, the flow and the renderer's flags
-- [Review notes format](docs/review-notes.md): the JSON Claude writes
-- [UI screenshots](docs/ui-screenshots.md): sources, tools and pitfalls
-
-## Limits
-
-- A snapshot, not a live view. Run it again after new commits.
-- The guide is Claude's judgment. It points at where to look; it doesn't replace reading the code.
-- Binary files show as "binary file". Diffs use 4 lines of context.
-- Uncommitted work goes through `git stash create`, so tracked files only.
-
-## Development
-
-```
-bash tests/smoke.sh
-```
-
-Builds a throwaway repo, renders a page and checks the output, including that a focus link to a file outside the diff fails loudly.
 
 ## License
 

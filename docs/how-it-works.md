@@ -10,11 +10,12 @@ skills/diff-review/
     shoot.cjs           one Playwright screenshot of a URL or element
     base-worktree.sh    check out the "before" commit, clean up afterwards
     open.sh             open a file in the default browser (WSL, Linux, macOS)
+    default-range.sh    the default range to review
 ```
 
 ## The flow
 
-1. Pick the range (`HEAD~1..HEAD` by default).
+1. Pick the range: the whole branch since it left the default branch (`scripts/default-range.sh`), or the last commit when you are on the default branch.
 2. Claude reads the diff and writes `notes.json` ([format](review-notes.md)).
 3. If the diff changes how something looks, it captures before/after images ([how](ui-screenshots.md)).
 4. `render_diff.py` builds one HTML page from the diff, the notes and the images.

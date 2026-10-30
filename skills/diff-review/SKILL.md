@@ -13,7 +13,7 @@ Crit and Plannotator were tried for this and don't work on a phone (hover-only c
 
 ## Steps
 
-1. **Pick the range.** Default `HEAD~1..HEAD`. Branch review: `<default-branch>..HEAD`. Uncommitted work: `git stash create` prints a commit hash without touching the tree; pass `HEAD..<hash>` (tracked files only, so `git add -N` new files first). State the range you chose.
+1. **Pick the range.** Default is the whole branch: run `bash <skill-dir>/scripts/default-range.sh` in the repo (merge-base with the default branch to `HEAD`; the last commit when already on the default branch). If the user names a commit, a count ("last 3 commits") or a range, use that instead. Uncommitted work: `git stash create` prints a commit hash without touching the tree; pass `HEAD..<hash>` (tracked files only, so `git add -N` new files first). State the range you chose.
 2. **Read the diff yourself** (`git diff <range>`) before writing the notes. The guide is your judgment, so write it from the real code, including callers or validation outside the diff when a risk depends on them.
 3. **Write `notes.json`** in the scratchpad (schema below).
 4. **Screenshots, only if the diff changes how something looks.** Skip otherwise. See Screenshots.
