@@ -2,7 +2,7 @@
 /* Screenshot one URL (or one element) with Playwright, resolved from the target repo.
  *
  * node shoot.cjs --url URL --out FILE.png [--width 390] [--height 780] [--wait 1500]
- *                [--click "role:button:Pick a date" | --click "css:.open-menu"]... [--selector CSS] [--full]
+ *                [--click "role:button:Pick a date" | --click "css:.open-menu"]... [--selector CSS] [--full] [--scheme dark|light]
  *
  * Run it from inside the repo being reviewed so the repo's own Playwright is found.
  * Falls back to a pnpm store copy, then to a global install.
@@ -52,6 +52,7 @@ function loadPlaywright() {
   const page = await browser.newPage({
     viewport: { width: Number(opt.width || 390), height: Number(opt.height || 780) },
     deviceScaleFactor: 1,
+    colorScheme: opt.scheme === 'dark' ? 'dark' : 'light',
   });
   await page.goto(opt.url, { waitUntil: 'load' });
   await page.waitForTimeout(Number(opt.wait || 1500));

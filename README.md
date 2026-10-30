@@ -1,57 +1,70 @@
 # diff-review
 
-A Claude Code plugin that turns a git diff into a page you can actually review, on a phone or on a desktop.
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Claude Code plugin](https://img.shields.io/badge/Claude%20Code-plugin-d97757.svg)](#quickstart)
 
-Terminal diffs are hard to read on a small screen, and most review tools need a mouse. `diff-review` builds one self-contained HTML page with:
+Review a git diff as a readable page, on your phone or your desktop. Claude tells you what changed and where to look, shows before/after screenshots for UI changes, and lays out the diff so it's pleasant to read.
 
-- **A guide to the change.** A short plain-language summary, a "look closely" list ranked by risk with links that jump to the exact line, and a "safe to skim" list.
-- **Before/after screenshots** when the diff changes how something looks.
-- **The diff itself**: one column with wrapped lines on a phone, side by side on a wide screen, with collapsible files.
-- **Navigation**: a sticky contents sidebar on wide screens (sections and files, with the current one highlighted), and a row of jump links plus a floating back-to-top button on a phone.
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/desktop-guide-dark.png">
+  <img src="docs/screenshots/desktop-guide-light.png" alt="A review page: contents sidebar, a summary, risk-ranked things to look at, and before/after screenshots">
+</picture>
+
+## Why
+
+Terminal diffs are hard to read on a small screen, and most review tools need a mouse. You also still have to work out what matters in a 500-line diff.
+
+`diff-review` reads the change for you and builds one self-contained HTML page:
+
+- **A guide to the change.** A short summary, a "look closely" list ranked by risk that jumps to the exact line, and a "safe to skim" list.
+- **Before/after screenshots** when the diff changes how something looks (Storybook or a dev server).
+- **A diff built for reading.** Wrapped lines in one column on a phone, side by side on a wide screen, collapsible files, light and dark themes.
+- **Easy navigation.** A sticky contents sidebar on desktop, jump links and a back-to-top button on a phone.
 
 <p align="center">
-  <img src="docs/screenshots/phone-guide.png" width="260" alt="Phone: contents row, summary and risk-ranked list">
-  <img src="docs/screenshots/phone-diff.png" width="260" alt="Phone: unified diff with wrapped lines">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/phone-guide-dark.png">
+    <img src="docs/screenshots/phone-guide-light.png" width="300" alt="On a phone: summary and things to look at">
+  </picture>
+  &nbsp;&nbsp;
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/phone-diff-dark.png">
+    <img src="docs/screenshots/phone-diff-light.png" width="300" alt="On a phone: unified diff with wrapped lines">
+  </picture>
 </p>
 
-![Desktop: guide and before/after screenshots](docs/screenshots/desktop-guide.png)
+## Quickstart
 
-![Desktop: side-by-side diff](docs/screenshots/desktop-diff.png)
-
-The screenshots come from [`examples/`](examples/), a small demo change. Open [`examples/brew-timer-review.html`](examples/brew-timer-review.html) in a browser to see the real page.
-
-## Install
-
-In Claude Code:
+### 1. Install
 
 ```
 /plugin marketplace add sahariko/diff-review
 /plugin install diff-review@diff-review
 ```
 
-Restart Claude Code if it asks you to. To install by hand instead, copy `skills/diff-review/` into `~/.claude/skills/`.
+<details>
+<summary>Install without the plugin system</summary>
 
-### Requirements
+Copy `skills/diff-review/` into `~/.claude/skills/`.
 
-| Needed for | What |
-|---|---|
-| The page | `git` and Python 3 |
-| Before/after screenshots | Node 18+ and [Playwright](https://playwright.dev) with Chromium. If the repo doesn't have it, the skill tells you and suggests `npm i --no-save playwright && npx playwright install chromium` (about 150 MB). Without it, the page is built without screenshots. |
-| Remote mode | A Claude Code setup that has the Artifact tool (publishes a private page you can open on any device) |
+</details>
 
-## Use
-
-In any git repository, ask Claude Code:
+### 2. Run it in any git repo
 
 ```
 /diff-review
-/diff-review review the last 3 commits on my phone
-/diff-review main..HEAD, local
 ```
 
 Claude reads the diff, writes the review notes from the real code, takes screenshots if the UI changed, builds the page and opens it.
 
-### Local and remote
+More examples:
+
+```
+/diff-review review the last 3 commits on my phone
+/diff-review main..HEAD, local
+```
+
+## Local and remote
 
 | | Local | Remote |
 |---|---|---|
@@ -59,33 +72,49 @@ Claude reads the diff, writes the review notes from the real code, takes screens
 | What happens | Writes `~/.cache/diff-review/<repo>-<range>.html` and opens it in your browser | Publishes the same page as a private Artifact and opens the link |
 | Your code | Stays on your machine | Is uploaded to a private page on claude.ai; only you can open it until you share it |
 
-If the mode isn't clear, the skill uses local and offers remote. It never publishes unless you ask for a phone view, a link or sharing. A phone can't open a local file, so for the phone, use remote.
+If the mode isn't clear, it uses local and offers remote. It never publishes unless you ask for a phone view, a link or sharing. A phone can't open a local file, so for the phone, use remote.
 
-### Screenshots
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/desktop-diff-dark.png">
+  <img src="docs/screenshots/desktop-diff-light.png" alt="Side-by-side diff on desktop, with the file list in the sidebar">
+</picture>
 
-For diffs that touch visible UI, the skill runs a preflight check and picks a source:
+Want to see a real page? Open [`examples/brew-timer-review.html`](examples/brew-timer-review.html) in a browser.
 
-1. **Storybook**, if the repo has it: it screenshots the stories for the changed components.
-2. **A dev server**, if the repo has a `dev` script: it opens the page that shows the change.
-3. **Neither works**: it skips screenshots and says so. It never uses placeholder images.
+## Screenshots of UI changes
+
+For diffs that touch visible UI, a preflight check picks the source:
+
+1. **Storybook**, if the repo has it: screenshots the stories for the changed components.
+2. **A dev server**, if the repo has a `dev` script: opens the page that shows the change.
+3. **Neither works**: skips screenshots and says so. It never uses placeholder images.
 
 The "before" image comes from a temporary git worktree of the base commit, removed afterwards.
 
-## How it works
+## Requirements
+
+| For | You need |
+|---|---|
+| The page | `git` and Python 3 |
+| Screenshots | Node 18+ and [Playwright](https://playwright.dev) with Chromium. If the repo doesn't have it, the skill asks before running `npm i --no-save playwright && npx playwright install chromium` (about 150 MB). Without it, the page is built without screenshots. |
+| Remote mode | A Claude Code setup with the Artifact tool |
+
+<details>
+<summary>How it works</summary>
 
 ```
 skills/diff-review/
   SKILL.md              the instructions Claude follows
   scripts/
     render_diff.py      git diff + notes.json + screenshots -> one HTML page
-    diff.css, diff.js   the page's styles (light and dark) and its small script
+    diff.css, diff.js   the page's styles (light and dark) and small script
     preflight.sh        what the repo offers for screenshots
     shoot.cjs           one Playwright screenshot of a URL or element
     base-worktree.sh    check out the "before" commit, clean up afterwards
     open.sh             open a file in the default browser (WSL, Linux, macOS)
 ```
 
-The review notes are JSON that Claude writes after reading the diff:
+Claude writes the review notes as JSON after reading the diff:
 
 ```json
 {
@@ -96,15 +125,24 @@ The review notes are JSON that Claude writes after reading the diff:
 }
 ```
 
-`render_diff.py` can also be run on its own: `python3 skills/diff-review/scripts/render_diff.py --repo . --range HEAD~1..HEAD --out review.html --standalone`.
+`render_diff.py` also runs on its own:
 
-## Limits
+```
+python3 skills/diff-review/scripts/render_diff.py --repo . --range HEAD~1..HEAD --out review.html --standalone
+```
+
+</details>
+
+<details>
+<summary>Limits</summary>
 
 - Read-only. Feedback goes back through the chat.
 - A snapshot, not a live view. Run it again after new commits.
 - The guide is Claude's judgment. It points at where to look; it doesn't replace reading the code.
 - Binary files show as "binary file". Diffs use 4 lines of context.
-- Uncommitted work works through `git stash create`; tracked files only.
+- Uncommitted work goes through `git stash create`, so tracked files only.
+
+</details>
 
 ## Development
 
@@ -112,8 +150,8 @@ The review notes are JSON that Claude writes after reading the diff:
 bash tests/smoke.sh
 ```
 
-builds a throwaway repo, renders a page and checks the output, including that a focus link to a file outside the diff fails loudly.
+Builds a throwaway repo, renders a page and checks the output, including that a focus link to a file outside the diff fails loudly.
 
 ## License
 
-MIT
+[MIT](LICENSE)
