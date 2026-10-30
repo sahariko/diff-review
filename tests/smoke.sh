@@ -15,6 +15,7 @@ grep -q '<!doctype html>' out.html
 grep -q 'data-target="f0-L2"' out.html   # focus link resolves to an added line
 grep -q 'class="toc"' out.html
 grep -q '<span class="branch">main</span>' out.html   # branch shown at the top
+grep -q '<title>[^<]* · main</title>' out.html   # tab title: repo · branch
 git checkout -q --detach && python3 "$render" --repo . --range HEAD~1..HEAD --out det.html --standalone
 grep -qE '<span class="branch">[0-9a-f]{7,}</span>' det.html   # detached HEAD shows the short sha
 git checkout -q main

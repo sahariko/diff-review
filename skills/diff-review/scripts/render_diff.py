@@ -269,7 +269,7 @@ totals = "".join(totals_html(k, scope_files[k]) for k, _, _, _ in SCOPES)
 CSS = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "diff.css")).read()
 JS = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "diff.js")).read()
 
-page = f"""<title>Diff Review</title>
+page = f"""<title>{e(repo_name)} · {e(branch_name)}</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;600&display=swap">
 <style>{CSS}</style>
