@@ -16,14 +16,14 @@ Crit and Plannotator were tried for this and don't work on a phone (hover-only c
 1. **Pick the range.** Default is the whole branch: run `bash <skill-dir>/scripts/default-range.sh` in the repo (merge-base with the default branch to `HEAD`; the last commit when already on the default branch). If the user names a commit, a count ("last 3 commits") or a range, use that instead. Uncommitted work: `git stash create` prints a commit hash without touching the tree; pass `HEAD..<hash>` (tracked files only, so `git add -N` new files first). State the range you chose. For a range ending in `HEAD` the first scope tab shows everything since the base: the commits plus staged and unstaged edits (the diff of the base against the working tree).
 2. **Read the diff yourself** (`git diff <range>`) before writing the notes. The guide is your judgment, so write it from the real code, including callers or validation outside the diff when a risk depends on them.
 3. **Write `notes.json`** in the scratchpad (schema below).
-4. **Screenshots, only if the diff changes how something looks.** Skip otherwise. See Screenshots.
+4. **Screenshot gate (never skipped).** Run `git diff --name-only <range>` and check the list: if any file is a style (`.css`, `.scss`, `.sass`, `.less`, CSS-in-JS or theme/token files), a view component (`.tsx`, `.jsx`, `.vue`, `.svelte`), a template, or a story, the diff changes how something looks and you capture before/after screenshots as part of this task, without asking. Start with `preflight.sh`. If no file matches, write "no visual files in the diff" in the reply's Screenshots line. See Screenshots.
 5. **Render** to the path for the mode (see Modes). Add `--standalone` in local mode so the file is a complete HTML document; omit it for remote:
    ```bash
    python3 <skill-dir>/scripts/render_diff.py \
      --repo "$PWD" --range HEAD~1..HEAD --out <out>.html \
      --notes <scratchpad>/notes.json [--shots <scratchpad>/shots]
    ```
-6. **Deliver** by mode, then **reply with the link or path and two lines**: the range, and the one thing in the guide that most needs a human look.
+6. **Deliver** by mode, then **reply with the link or path and three lines**: the range, the one thing in the guide that most needs a human look, and `Screenshots:` with either the pairs captured or the blocker found (what preflight or the server start reported). "I haven't run the app", "to keep it quick" and "I can take them if you want" are not blockers.
 
 ## Modes
 
@@ -61,7 +61,7 @@ Do not pad `focus` to look thorough. If nothing is risky, say so in `summary` an
 
 ## Screenshots
 
-Only for diffs that touch visible UI (styles, view components, templates, stories). The script embeds `<label>.before.png` and `<label>.after.png` from `--shots`. Either side may be missing for a new or removed view. Labels use hyphens (`task-card-done`). Phone width (about 390px) unless the change is desktop-only. Keep each PNG under about 400 KB; the page must stay under 16 MB.
+Required whenever the step 4 gate matches, including uncommitted work, small spacing or colour tweaks and refactors that restyle (the reviewer cannot judge CSS from the diff alone). Skipping needs a concrete blocker from the sources below, reported in the reply. The script embeds `<label>.before.png` and `<label>.after.png` from `--shots`. Either side may be missing for a new or removed view. Labels use hyphens (`task-card-done`). Phone width (about 390px) unless the change is desktop-only. Keep each PNG under about 400 KB; the page must stay under 16 MB.
 
 Bundled tools (run from the repo root, with `bash` / `node`):
 
@@ -76,8 +76,8 @@ If preflight shows Playwright or Chromium missing, install without touching the 
 Pick the source by what preflight found:
 
 1. **Storybook**: screenshot stories for the changed components at `http://localhost:<port>/iframe.html?id=<story-id>&viewMode=story`; ids come from `/index.json`. Start it on a free port with `--ci --no-open`. Other worktrees often hold 6006 with stale stories, so confirm the story id you want is in the index of the server you started. A story with a play function can end on an empty screen (a dialog that closes itself); open an earlier story and use `--click` to reach the state instead.
-2. **No Storybook, but a dev server** (`dev` script, or a `run` skill if present): start it, open the route that shows the change, and capture with `shoot.cjs`. If it needs a database or login you cannot satisfy, skip.
-3. **Neither works**: skip screenshots and say so in the reply. Never use a placeholder image.
+2. **No Storybook, but a dev server** (`dev` script, or a `run` skill if present): start it, open the route that shows the change, and capture with `shoot.cjs`. Try it before concluding it needs a database or login; skip only if the start or the page actually fails.
+3. **Neither works** (you tried): skip screenshots and put the failure in the reply's Screenshots line. Never use a placeholder image.
 
 For a **before** image, make a base worktree, start the same source from it, capture, then remove it. A new view has no before; leave that side out.
 
