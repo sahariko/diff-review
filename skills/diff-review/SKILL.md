@@ -13,7 +13,7 @@ Crit and Plannotator were tried for this and don't work on a phone (hover-only c
 
 ## Steps
 
-1. **Pick the range.** Default is the whole branch: run `bash <skill-dir>/scripts/default-range.sh` in the repo (merge-base with the default branch to `HEAD`; the last commit when already on the default branch). If the user names a commit, a count ("last 3 commits") or a range, use that instead. Uncommitted work: `git stash create` prints a commit hash without touching the tree; pass `HEAD..<hash>` (tracked files only, so `git add -N` new files first). State the range you chose.
+1. **Pick the range.** Default is the whole branch: run `bash <skill-dir>/scripts/default-range.sh` in the repo (merge-base with the default branch to `HEAD`; the last commit when already on the default branch). If the user names a commit, a count ("last 3 commits") or a range, use that instead. Uncommitted work: `git stash create` prints a commit hash without touching the tree; pass `HEAD..<hash>` (tracked files only, so `git add -N` new files first). State the range you chose. For a range ending in `HEAD` the first scope tab shows everything since the base: the commits plus staged and unstaged edits (the diff of the base against the working tree).
 2. **Read the diff yourself** (`git diff <range>`) before writing the notes. The guide is your judgment, so write it from the real code, including callers or validation outside the diff when a risk depends on them.
 3. **Write `notes.json`** in the scratchpad (schema below).
 4. **Screenshots, only if the diff changes how something looks.** Skip otherwise. See Screenshots.
@@ -86,6 +86,7 @@ Stop every server you started, by PID. Never `pkill -f` a pattern: it can match 
 ## Page behavior
 
 - A Contents row at the top links to What to know, Visual changes (when present) and Files.
+- The page header has a scope selector: **Branch** (everything since the base: commits plus uncommitted edits), **Committed** (only the range) and **Uncommitted** (`git diff HEAD`, staged or not). All three diffs are rendered into the page, so switching needs no server. The notes and screenshots belong to the range and show only under Branch. Uncommitted work is visible without the `git stash create` trick.
 - Files open by default except tests and config (`test` in the name, `package.json`, README, lockfiles). The "Open tests & config" checkbox toggles them.
 - Focus items jump to the line and flash it. Works in both unified and side-by-side views.
 - Screenshots: Before/After tabs on a phone, both side by side on desktop.

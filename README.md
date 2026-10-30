@@ -43,7 +43,7 @@ Claude reads the diff of your whole branch, writes the review notes, takes scree
 ## Usage
 
 ```
-/diff-review                              # the whole branch, opened in your browser
+/diff-review                              # the whole branch, opened in your browser (switch to Committed or Uncommitted on the page)
 /diff-review the last commit              # just HEAD
 /diff-review the last 3 commits           # any commit range
 /diff-review on my phone                  # publish a private page and open the link

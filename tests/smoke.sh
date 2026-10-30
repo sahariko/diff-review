@@ -14,6 +14,23 @@ python3 "$render" --repo . --range HEAD~1..HEAD --out out.html --notes notes.jso
 grep -q '<!doctype html>' out.html
 grep -q 'data-target="f0-L2"' out.html   # focus link resolves to an added line
 grep -q 'class="toc"' out.html
+# scopes: Branch is the default and holds everything; Committed and Uncommitted split it
+grep -q 'class="layout" data-scope="branch"' out.html
+grep -q 'No uncommitted changes' out.html   # empty state
+printf 'one\nTWO\nthree\nSTAGED\n' > a.txt && git add a.txt && printf 'one\nTWO\nthree\nSTAGED\nWORK\n' > a.txt
+python3 "$render" --repo . --range HEAD~1..HEAD --out scopes.html --standalone
+python3 - scopes.html <<'PY'
+import re, sys
+h = open(sys.argv[1]).read()
+def scope(pre):
+    return re.search(r'id="%s0".*?</details>' % pre, h, re.S).group(0)
+branch, committed, uncommitted = scope("f"), scope("c"), scope("u")
+assert "TWO" in branch and "STAGED" in branch and "WORK" in branch       # branch: commit + staged + unstaged
+assert "TWO" in committed and "STAGED" not in committed and "WORK" not in committed   # committed: the range only
+assert "STAGED" in uncommitted and "WORK" in uncommitted                  # uncommitted: staged + unstaged
+assert "No committed changes" not in h and "No uncommitted changes" not in h
+PY
+git reset -q --hard HEAD
 # a focus item pointing outside the diff must fail loudly
 printf '{"focus":[{"path":"nope.txt","title":"t","why":"w"}]}' > bad.json
 if python3 "$render" --repo . --range HEAD~1..HEAD --out bad.html --notes bad.json 2>/dev/null; then

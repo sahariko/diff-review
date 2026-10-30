@@ -32,7 +32,7 @@ python3 skills/diff-review/scripts/render_diff.py \
 | Flag | |
 |---|---|
 | `--repo` | The git repository |
-| `--range` | `BASE..HEAD` |
+| `--range` | `BASE..HEAD`. The page embeds three scopes behind a selector: Branch (everything since `BASE`, committed or not: `git diff BASE`, when the range ends in `HEAD`), Committed (the range only) and Uncommitted (`git diff HEAD`) |
 | `--out` | Output HTML file |
 | `--notes` | Review notes JSON (optional) |
 | `--shots` | Folder of `<label>.before.png` and `<label>.after.png` (optional) |
