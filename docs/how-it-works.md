@@ -34,6 +34,7 @@ python3 skills/diff-review/scripts/render_diff.py \
 | `--repo` | The git repository |
 | `--range` | `BASE..HEAD`. The page embeds three scopes behind a selector: Branch (everything since `BASE`, committed or not: `git diff BASE`, when the range ends in `HEAD`), Committed (the range only) and Uncommitted (`git diff HEAD`) |
 | `--out` | Output HTML file |
+| `--title` | Page title (optional, capped at 80 characters). Without it: the commit subject for one commit, the humanised branch name for several, or "N commits" when the range has no named branch or is on a trunk branch. `git stash create` commits are never counted or used |
 | `--notes` | Review notes JSON (optional) |
 | `--shots` | Folder of `<label>.before.png` and `<label>.after.png` (optional) |
 | `--standalone` | Wrap in a full HTML document, for opening as a local file. Leave it off when publishing as an Artifact. |

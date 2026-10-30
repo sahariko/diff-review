@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Render a git range as one self-contained HTML review page (phone and desktop).
 
-usage: render_diff.py --repo DIR --range BASE..HEAD --out FILE [--notes notes.json] [--shots DIR] [--standalone]
+usage: render_diff.py --repo DIR --range BASE..HEAD --out FILE [--title TEXT] [--notes notes.json] [--shots DIR] [--standalone]
 
 notes.json (all keys optional):
   {"summary": ["paragraph", ...],
@@ -24,6 +24,7 @@ ap = argparse.ArgumentParser()
 ap.add_argument("--repo", required=True)
 ap.add_argument("--range", required=True)
 ap.add_argument("--out", required=True)
+ap.add_argument("--title", help="page title, instead of the one derived from the commits or the branch")
 ap.add_argument("--notes")
 ap.add_argument("--shots")
 ap.add_argument("--standalone", action="store_true", help="wrap in a full HTML document (local files); omit for Artifact publishing")
@@ -39,6 +40,10 @@ def git(*a):
 head = args.range.split("..")[-1]
 log = git("log", "--format=%h\x1f%s\x1f%an\x1f%ad", "--date=short", args.range).strip().split("\n")
 commits = [l.split("\x1f") for l in log if l]
+# `git stash create` commits hold uncommitted work and their subjects say nothing, so they don't count as commits.
+STASH_SUBJECT = re.compile(r"(WIP on|index on|untracked files on) [^:]+: [0-9a-f]{7,} ")
+n_logged = len(commits)
+commits = [c for c in commits if not STASH_SUBJECT.match(c[1])]
 single = len(commits) == 1
 
 
@@ -228,15 +233,41 @@ def files_section(key, label, pre, fs):
             + "\n".join(f'<div class="scope-file" data-in="{key}">{render_file(pre, i, f)}</div>' for i, f in enumerate(fs)))
 
 
+TITLE_MAX = 80
+TRUNKS = {"main", "master", "trunk", "develop"}
+
+
+def h1(derived):
+    """The page title: --title or the derived text, capped at a word boundary. The full text stays as a tooltip."""
+    full = " ".join((args.title or derived).split())
+    if len(full) <= TITLE_MAX:
+        return f"<h1>{e(full)}</h1>"
+    short = full[:TITLE_MAX - 1]
+    short = (short.rsplit(" ", 1)[0] if " " in short else short).rstrip(" ,;:-")
+    return f'<h1 title="{e(full)}">{e(short)}…</h1>'
+
+
+def branch_title():
+    """The range's branch as words ("t/fix-the_login" -> "Fix the login"), or None if no name describes it."""
+    # A stash commit has no branch of its own; it was taken from HEAD.
+    rev = "HEAD" if len(commits) < n_logged else head.lstrip(".")
+    ref = git("rev-parse", "--symbolic-full-name", rev).strip()
+    if not ref.startswith("refs/heads/") or ref[len("refs/heads/"):] in TRUNKS:
+        return None
+    words = re.sub(r"[-_]+", " ", ref.rsplit("/", 1)[-1]).strip()
+    return words[:1].upper() + words[1:] or None
+
+
 if not commits:
     n_unc = len(files)
-    title_html = f'<h1>Uncommitted changes</h1><div class="sub">{n_unc} file{"" if n_unc == 1 else "s"}, not yet committed</div>'
+    title_html = f'{h1("Uncommitted changes")}<div class="sub">{n_unc} file{"" if n_unc == 1 else "s"}, not yet committed</div>'
 elif single:
     s, subj, au, dt = commits[0]
-    title_html = f'<div class="sha">{e(s)} · {e(dt)} · {e(au)}</div><h1>{e(subj)}</h1>'
+    title_html = f'<div class="sha">{e(s)} · {e(dt)} · {e(au)}</div>{h1(subj)}'
 else:
-    title_html = (f'<div class="sha">{e(args.range)} · {len(commits)} commits</div><h1>{e(commits[0][1])}'
-                  f'{" and " + str(len(commits) - 1) + " more" if len(commits) > 1 else ""}</h1>')
+    count = f"{len(commits)} commits"
+    name = args.title or branch_title()
+    title_html = f'<div class="sha">{e(args.range)}{" · " + count if name else ""}</div>{h1(name or count)}'
     title_html += '<ul class="commits">' + "".join(f"<li><code>{e(c[0])}</code> {e(c[1])}</li>" for c in commits[:12]) + "</ul>"
 
 repo_name, branch_name = repo_and_branch()
