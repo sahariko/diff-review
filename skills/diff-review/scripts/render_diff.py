@@ -42,6 +42,12 @@ commits = [l.split("\x1f") for l in log if l]
 single = len(commits) == 1
 
 
+def repo_and_branch():
+    top = git("rev-parse", "--show-toplevel").strip()
+    branch = git("branch", "--show-current").strip() or git("rev-parse", "--short", "HEAD").strip()
+    return os.path.basename(top), branch
+
+
 def parse(raw):
     files, cur = [], None
     for line in raw.split("\n"):
@@ -234,6 +240,7 @@ else:
                   f'{" and " + str(len(commits) - 1) + " more" if len(commits) > 1 else ""}</h1>')
     title_html += '<ul class="commits">' + "".join(f"<li><code>{e(c[0])}</code> {e(c[1])}</li>" for c in commits[:12]) + "</ul>"
 
+repo_name, branch_name = repo_and_branch()
 guide_h, shots_h = notes_html(), shots_html()
 if guide_h:
     guide_h = guide_h.replace('<section class="guide"', '<section class="guide" data-in="branch"', 1)
@@ -267,7 +274,8 @@ page = f"""<title>Diff Review</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;600&display=swap">
 <style>{CSS}</style>
 <div class="layout" data-scope="branch">
-<header>{title_html}
+<header><div class="where"><span class="repo">{e(repo_name)}</span><span class="sep">/</span><span class="branch">{e(branch_name)}</span></div>
+{title_html}
 {scope_bar}
 <div class="totals">{totals}
 <label class="toggle"><input type="checkbox" id="quiet-toggle"> Open tests &amp; config</label></div></header>
