@@ -40,34 +40,44 @@ head = args.range.split("..")[-1]
 log = git("log", "--format=%h\x1f%s\x1f%an\x1f%ad", "--date=short", args.range).strip().split("\n")
 commits = [l.split("\x1f") for l in log if l]
 single = len(commits) == 1
-raw = git("diff", "-U4", "--no-color", args.range)
 
-files, cur = [], None
-for line in raw.split("\n"):
-    if line.startswith("diff --git "):
-        m = re.match(r"diff --git a/(.*) b/(.*)", line)
-        cur = {"path": m.group(2), "hunks": [], "add": 0, "del": 0, "status": "modified", "binary": False}
-        files.append(cur)
-    elif cur is None:
-        continue
-    elif line.startswith("new file"):
-        cur["status"] = "added"
-    elif line.startswith("deleted file"):
-        cur["status"] = "deleted"
-    elif line.startswith("Binary files"):
-        cur["binary"] = True
-    elif line.startswith("@@"):
-        m = re.match(r"@@ -(\d+)(?:,\d+)? \+(\d+)(?:,\d+)? @@ ?(.*)", line)
-        cur["hunks"].append({"old": int(m.group(1)), "new": int(m.group(2)), "ctx": m.group(3), "lines": []})
-    elif cur["hunks"] and line[:1] in ("+", "-", " "):
-        cur["hunks"][-1]["lines"].append(line)
-        if line[0] == "+":
-            cur["add"] += 1
-        elif line[0] == "-":
-            cur["del"] += 1
 
-total_add = sum(f["add"] for f in files)
-total_del = sum(f["del"] for f in files)
+def parse(raw):
+    files, cur = [], None
+    for line in raw.split("\n"):
+        if line.startswith("diff --git "):
+            m = re.match(r"diff --git a/(.*) b/(.*)", line)
+            cur = {"path": m.group(2), "hunks": [], "add": 0, "del": 0, "status": "modified", "binary": False}
+            files.append(cur)
+        elif cur is None:
+            continue
+        elif line.startswith("new file"):
+            cur["status"] = "added"
+        elif line.startswith("deleted file"):
+            cur["status"] = "deleted"
+        elif line.startswith("Binary files"):
+            cur["binary"] = True
+        elif line.startswith("@@"):
+            m = re.match(r"@@ -(\d+)(?:,\d+)? \+(\d+)(?:,\d+)? @@ ?(.*)", line)
+            cur["hunks"].append({"old": int(m.group(1)), "new": int(m.group(2)), "ctx": m.group(3), "lines": []})
+        elif cur["hunks"] and line[:1] in ("+", "-", " "):
+            cur["hunks"][-1]["lines"].append(line)
+            if line[0] == "+":
+                cur["add"] += 1
+            elif line[0] == "-":
+                cur["del"] += 1
+    return files
+
+
+# The page carries every scope so the reader can switch without a server: the whole branch (--range),
+# only the committed range, and only the uncommitted work (git diff HEAD). Ids are prefixed per scope.
+# "Whole branch" is everything since the base, committed or not: for a range ending in HEAD that is the
+# base compared with the working tree (committed + uncommitted). Other ranges stay exactly as named.
+with_worktree = args.range.endswith("..HEAD")
+branch_diff = [args.range.split("..")[0]] if with_worktree else [args.range]
+SCOPES = [("branch", "Branch", "f", branch_diff), ("committed", "Committed", "c", [args.range]), ("uncommitted", "Uncommitted", "u", ["HEAD"])]
+scope_files = {key: parse(git("diff", "-U4", "--no-color", *extra)) for key, _, _, extra in SCOPES}
+files = scope_files["branch"]
 file_index = {f["path"]: i for i, f in enumerate(files)}
 
 # ---- diff rendering -------------------------------------------------------
@@ -86,7 +96,7 @@ def rows_for(fi, h):
             d = dels[k] if k < len(dels) else None
             a = adds[k] if k < len(adds) else None
             left = cell("del", d[0], d[1]) if d else cell("empty", "", "")
-            right = cell("add", a[0], a[1], f"f{fi}-L{a[0]}") if a else cell("empty", "", "")
+            right = cell("add", a[0], a[1], f"{fi}-L{a[0]}") if a else cell("empty", "", "")
             out.append((left, right))
         dels.clear()
         adds.clear()
@@ -100,31 +110,31 @@ def rows_for(fi, h):
             o += 1
         elif kind == "+":
             adds.append((n, text))
-            uni.append(f'<div class="u add" data-a="f{fi}-L{n}"><span class="num">{n}</span><span class="mark">+</span><code>{e(text) or " "}</code></div>')
+            uni.append(f'<div class="u add" data-a="{fi}-L{n}"><span class="num">{n}</span><span class="mark">+</span><code>{e(text) or " "}</code></div>')
             n += 1
         else:
             flush()
-            out.append((cell("ctx", o, text), cell("ctx", n, text, f"f{fi}-L{n}")))
-            uni.append(f'<div class="u ctx" data-a="f{fi}-L{n}"><span class="num">{n}</span><span class="mark"></span><code>{e(text) or " "}</code></div>')
+            out.append((cell("ctx", o, text), cell("ctx", n, text, f"{fi}-L{n}")))
+            uni.append(f'<div class="u ctx" data-a="{fi}-L{n}"><span class="num">{n}</span><span class="mark"></span><code>{e(text) or " "}</code></div>')
             o += 1
             n += 1
     flush()
     return out, uni
 
 
-def render_file(i, f):
+def render_file(pre, i, f):
     quiet = "test" in f["path"].split("/")[-1] or f["path"].endswith(("package.json", "README.md", ".lock", "lock.yaml"))
     d, _, name = f["path"].rpartition("/")
     unified, split = [], []
     for h in f["hunks"]:
-        pairs, uni = rows_for(i, h)
+        pairs, uni = rows_for(f"{pre}{i}", h)
         head_row = f'<div class="hunk">@@ line {h["new"]} {e(h["ctx"])}</div>'
         unified.append(head_row + "".join(uni))
         split.append(head_row + "".join(f'<div class="pair">{l}{r}</div>' for l, r in pairs))
     body = "binary file" if f["binary"] and not f["hunks"] else (
         f'<div class="view-unified">{"".join(unified)}</div><div class="view-split">{"".join(split)}</div>')
     badge = f'<em class="st {f["status"]}">{f["status"]}</em>' if f["status"] != "modified" else ""
-    return f"""<details class="file" id="f{i}" data-quiet="{int(quiet)}"{"" if quiet else " open"}>
+    return f"""<details class="file" id="{pre}{i}" data-quiet="{int(quiet)}"{"" if quiet else " open"}>
 <summary><span class="fname"><span class="dir">{e(d + "/") if d else ""}</span><b>{e(name)}</b>{badge}</span>
 <span class="stat"><i class="a">+{f["add"]}</i> <i class="d">−{f["del"]}</i></span></summary>
 <div class="code">{body}</div></details>"""
@@ -192,11 +202,31 @@ def shots_html():
 
 
 # ---- page -----------------------------------------------------------------
-toc = "".join(
-    f'<a href="#f{i}" data-target="f{i}"><span>{e(f["path"])}</span><span class="stat"><i class="a">+{f["add"]}</i> <i class="d">−{f["del"]}</i></span></a>'
-    for i, f in enumerate(files))
-sections = "\n".join(render_file(i, f) for i, f in enumerate(files))
-if single:
+def totals_html(key, fs):
+    return (f'<span data-in="{key}">{len(fs)} files · <span class="a">+{sum(f["add"] for f in fs)}</span> '
+            f'<span class="d">−{sum(f["del"] for f in fs)}</span></span>')
+
+
+def side_file(key, pre, i, f):
+    d, _, name = f["path"].rpartition("/")
+    return (f'<a data-in="{key}" href="#{pre}{i}" data-target="{pre}{i}" title="{e(f["path"])}"><span>{e(name)}</span>'
+            f'<span class="stat"><i class="a">+{f["add"]}</i> <i class="d">−{f["del"]}</i></span></a>')
+
+
+def files_section(key, label, pre, fs):
+    if not fs:
+        return (f'<section class="files-sec" id="files-{key}" data-in="{key}"><h2>Files changed</h2>'
+                f'<div class="empty">No {"changes on this branch" if key == "branch" else label.lower() + " changes"}.</div></section>')
+    toc = "".join(
+        f'<a href="#{pre}{i}" data-target="{pre}{i}"><span>{e(f["path"])}</span><span class="stat"><i class="a">+{f["add"]}</i> <i class="d">−{f["del"]}</i></span></a>'
+        for i, f in enumerate(fs))
+    return (f'<section class="files-sec" id="files-{key}" data-in="{key}"><h2>Files changed</h2><nav class="files" aria-label="Files">{toc}</nav></section>\n'
+            + "\n".join(f'<div class="scope-file" data-in="{key}">{render_file(pre, i, f)}</div>' for i, f in enumerate(fs)))
+
+
+if not commits:
+    title_html = f'<div class="sha">{e(args.range)} · no commits</div><h1>Uncommitted changes</h1>'
+elif single:
     s, subj, au, dt = commits[0]
     title_html = f'<div class="sha">{e(s)} · {e(dt)} · {e(au)}</div><h1>{e(subj)}</h1>'
 else:
@@ -205,16 +235,29 @@ else:
     title_html += '<ul class="commits">' + "".join(f"<li><code>{e(c[0])}</code> {e(c[1])}</li>" for c in commits[:12]) + "</ul>"
 
 guide_h, shots_h = notes_html(), shots_html()
-sections_toc = ([("guide", "What to know")] if guide_h else []) + ([("visual", "Visual changes")] if shots_h else []) + [("files", f"Files ({len(files)})")]
-def side_file(i, f):
-    d, _, name = f["path"].rpartition("/")
-    return (f'<a href="#f{i}" data-target="f{i}" title="{e(f["path"])}"><span>{e(name)}</span>'
-            f'<span class="stat"><i class="a">+{f["add"]}</i> <i class="d">−{f["del"]}</i></span></a>')
-
-
-toc_html = ('<aside class="toc"><nav aria-label="Contents">'
-            + "".join(f'<a href="#{i}" data-spy="{i}">{e(t)}</a>' for i, t in sections_toc)
-            + '<div class="toc-files">' + "".join(side_file(i, f) for i, f in enumerate(files)) + "</div></nav></aside>")
+if guide_h:
+    guide_h = guide_h.replace('<section class="guide"', '<section class="guide" data-in="branch"', 1)
+if shots_h:
+    shots_h = shots_h.replace('<section class="visual"', '<section class="visual" data-in="branch"', 1)
+rbase = args.range.split("..")[0]
+n_commits = f'{len(commits)} commit{"" if len(commits) == 1 else "s"}'
+SCOPE_HINTS = {
+    "branch": (f'Everything since <code>{e(rbase)}</code>: {n_commits} plus uncommitted edits (new untracked files are not included until added).'
+               if with_worktree else f'The range <code>{e(args.range)}</code>, {n_commits}.'),
+    "committed": f'Only what is committed: <code>{e(args.range)}</code>, {n_commits}.',
+    "uncommitted": "Only what is not committed yet, staged or not (<code>git diff HEAD</code>).",
+}
+scope_hints = "".join(f'<p class="scope-hint" data-in="{k}">{h}</p>' for k, h in SCOPE_HINTS.items())
+scope_bar = ('<div class="scope" role="group" aria-label="Diff scope">'
+             + "".join(f'<button type="button" data-scope="{k}" aria-pressed="{str(k == "branch").lower()}">{l}</button>' for k, l, _, _ in SCOPES)
+             + "</div>" + scope_hints)
+nav_links = ((f'<a data-in="branch" href="#guide" data-spy="guide">What to know</a>' if guide_h else "")
+             + (f'<a data-in="branch" href="#visual" data-spy="visual">Visual changes</a>' if shots_h else "")
+             + "".join(f'<a data-in="{k}" href="#files-{k}" data-spy="files-{k}">Files ({len(scope_files[k])})</a>' for k, _, _, _ in SCOPES))
+toc_html = ('<aside class="toc"><nav aria-label="Contents">' + nav_links + '<div class="toc-files">'
+            + "".join(side_file(k, pre, i, f) for k, _, pre, _ in SCOPES for i, f in enumerate(scope_files[k])) + "</div></nav></aside>")
+sections = "\n".join(files_section(k, l, pre, scope_files[k]) for k, l, pre, _ in SCOPES)
+totals = "".join(totals_html(k, scope_files[k]) for k, _, _, _ in SCOPES)
 
 CSS = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "diff.css")).read()
 JS = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "diff.js")).read()
@@ -223,16 +266,16 @@ page = f"""<title>Diff Review</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;600&display=swap">
 <style>{CSS}</style>
-<div class="layout">
+<div class="layout" data-scope="branch">
 <header>{title_html}
-<div class="totals">{len(files)} files · <span class="a">+{total_add}</span> <span class="d">−{total_del}</span>
+{scope_bar}
+<div class="totals">{totals}
 <label class="toggle"><input type="checkbox" id="quiet-toggle"> Open tests &amp; config</label></div></header>
 {toc_html}
 <main>
 
 {guide_h}
 {shots_h}
-<section id="files"><h2>Files changed</h2><nav class="files" aria-label="Files">{toc}</nav></section>
 {sections}
 </main>
 </div>
@@ -245,4 +288,4 @@ if args.standalone:
             "<style>:root{color-scheme:light}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>"
             "</head><body>" + page + "</body></html>")
 open(args.out, "w").write(page)
-print(f"{len(files)} files, +{total_add} -{total_del}, {len(page) // 1024} KB -> {args.out}")
+print(f"{len(files)} files, committed {len(scope_files['committed'])}, uncommitted {len(scope_files['uncommitted'])}, {len(page) // 1024} KB -> {args.out}")

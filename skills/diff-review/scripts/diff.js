@@ -24,12 +24,21 @@
       card.querySelectorAll(".tabs button").forEach(function (x) { x.setAttribute("aria-pressed", String(x === b)); });
     }
   });
+  // Scope selector: switch which pre-rendered diff (branch, committed, uncommitted) is shown.
+  var layout = document.querySelector(".layout");
+  document.querySelectorAll(".scope button").forEach(function (b) {
+    b.addEventListener("click", function () {
+      layout.setAttribute("data-scope", b.getAttribute("data-scope"));
+      document.querySelectorAll(".scope button").forEach(function (x) { x.setAttribute("aria-pressed", String(x === b)); });
+      window.scrollTo(0, 0);
+    });
+  });
   var toggle = document.getElementById("quiet-toggle");
   if (toggle) toggle.addEventListener("change", function () {
     document.querySelectorAll('details[data-quiet="1"]').forEach(function (d) { d.open = toggle.checked; });
   });
   // Highlight the contents link for whatever is at the top of the screen.
-  var spy = Array.prototype.slice.call(document.querySelectorAll("#guide, #visual, #files, details.file"));
+  var spy = Array.prototype.slice.call(document.querySelectorAll("#guide, #visual, .files-sec, details.file"));
   var links = document.querySelectorAll(".toc a");
   var top = document.getElementById("to-top");
   if (top) top.addEventListener("click", function () {
