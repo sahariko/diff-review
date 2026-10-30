@@ -5,10 +5,7 @@
 
 Review a git diff as a readable page, on your phone or your desktop. Claude tells you what changed and where to look, shows before/after screenshots for UI changes, and lays out the diff so it's pleasant to read.
 
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/desktop-guide-dark.png">
-  <img src="docs/screenshots/desktop-guide-light.png" alt="A review page: contents sidebar, a summary, risk-ranked things to look at, and before/after screenshots">
-</picture>
+![A review page with a contents sidebar, a summary, risk-ranked things to look at, and before/after screenshots](docs/screenshots/desktop-guide.png)
 
 ## Why
 
@@ -21,17 +18,9 @@ Terminal diffs are hard to read on a small screen, and most review tools need a 
 - **A diff built for reading.** Wrapped lines in one column on a phone, side by side on a wide screen, collapsible files, light and dark themes.
 - **Easy navigation.** A sticky contents sidebar on desktop, jump links and a back-to-top button on a phone.
 
-<p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/phone-guide-dark.png">
-    <img src="docs/screenshots/phone-guide-light.png" width="300" alt="On a phone: summary and things to look at">
-  </picture>
-  &nbsp;&nbsp;
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/phone-diff-dark.png">
-    <img src="docs/screenshots/phone-diff-light.png" width="300" alt="On a phone: unified diff with wrapped lines">
-  </picture>
-</p>
+| On a phone: the guide | On a phone: the diff |
+|---|---|
+| ![Summary and things to look at](docs/screenshots/phone-guide.png) | ![Unified diff with wrapped lines](docs/screenshots/phone-diff.png) |
 
 ## Quickstart
 
@@ -42,12 +31,7 @@ Terminal diffs are hard to read on a small screen, and most review tools need a 
 /plugin install diff-review@diff-review
 ```
 
-<details>
-<summary>Install without the plugin system</summary>
-
-Copy `skills/diff-review/` into `~/.claude/skills/`.
-
-</details>
+Without the plugin system, copy `skills/diff-review/` into `~/.claude/skills/`.
 
 ### 2. Run it in any git repo
 
@@ -74,10 +58,7 @@ More examples:
 
 If the mode isn't clear, it uses local and offers remote. It never publishes unless you ask for a phone view, a link or sharing. A phone can't open a local file, so for the phone, use remote.
 
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/desktop-diff-dark.png">
-  <img src="docs/screenshots/desktop-diff-light.png" alt="Side-by-side diff on desktop, with the file list in the sidebar">
-</picture>
+![Side-by-side diff on desktop, with the file list in the sidebar](docs/screenshots/desktop-diff.png)
 
 Want to see a real page? Open [`examples/brew-timer-review.html`](examples/brew-timer-review.html) in a browser.
 
@@ -99,8 +80,7 @@ The "before" image comes from a temporary git worktree of the base commit, remov
 | Screenshots | Node 18+ and [Playwright](https://playwright.dev) with Chromium. If the repo doesn't have it, the skill asks before running `npm i --no-save playwright && npx playwright install chromium` (about 150 MB). Without it, the page is built without screenshots. |
 | Remote mode | A Claude Code setup with the Artifact tool |
 
-<details>
-<summary>How it works</summary>
+## How it works
 
 ```
 skills/diff-review/
@@ -131,18 +111,13 @@ Claude writes the review notes as JSON after reading the diff:
 python3 skills/diff-review/scripts/render_diff.py --repo . --range HEAD~1..HEAD --out review.html --standalone
 ```
 
-</details>
-
-<details>
-<summary>Limits</summary>
+## Limits
 
 - Read-only. Feedback goes back through the chat.
 - A snapshot, not a live view. Run it again after new commits.
 - The guide is Claude's judgment. It points at where to look; it doesn't replace reading the code.
 - Binary files show as "binary file". Diffs use 4 lines of context.
 - Uncommitted work goes through `git stash create`, so tracked files only.
-
-</details>
 
 ## Development
 
