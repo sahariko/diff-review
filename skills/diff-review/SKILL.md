@@ -15,7 +15,7 @@ Crit and Plannotator were tried for this and don't work on a phone (hover-only c
 
 1. **Pick the range.** Default is the whole branch: run `bash <skill-dir>/scripts/default-range.sh` in the repo (merge-base with the default branch to `HEAD`; the last commit when already on the default branch). If the user names a commit, a count ("last 3 commits") or a range, use that instead. Only uncommitted work: pass `HEAD..HEAD` and read the Uncommitted tab (`git add -N` new files first so they show). State the range you chose. For a range ending in `HEAD` the first scope tab shows everything since the base: the commits plus staged and unstaged edits (the diff of the base against the working tree).
 2. **Read the diff yourself** (`git diff <range>`) before writing the notes. The guide is your judgment, so write it from the real code, including callers or validation outside the diff when a risk depends on them.
-3. **Write `notes.json`** in the scratchpad (schema below).
+3. **Write `notes.json`** in the scratchpad (schema below). Before that, work out what this project treats as noise: read the test, e2e and story config that exists (`playwright.config.*` `testDir`, `cypress.config.*` `specPattern`, `.storybook/main.*` `stories`, jest/vitest `testMatch`/`include`, `.gitattributes` `linguist-generated`, `CODEOWNERS`, the folder layout) and list the diff files they cover as `collapse` globs. The built-in name guesses only cover common conventions; project config wins. Use `expand` for helpers the guesses would wrongly fold.
 4. **Screenshot gate (never skipped).** Run `git diff --name-only <range>` and check the list: if any file is a style (`.css`, `.scss`, `.sass`, `.less`, CSS-in-JS or theme/token files), a view component (`.tsx`, `.jsx`, `.vue`, `.svelte`), a template, or a story, the diff changes how something looks and you capture before/after screenshots as part of this task, without asking. Start with `preflight.sh`. If no file matches, write "no visual files in the diff" in the reply's Screenshots line. See Screenshots.
 5. **Render** to the path for the mode (see Modes). Add `--standalone` in local mode so the file is a complete HTML document; omit it for remote:
    ```bash
@@ -49,7 +49,9 @@ Crit and Plannotator were tried for this and don't work on a phone (hover-only c
     {"path": "src/db/completions.ts", "line": 116, "title": "Short noun phrase",
      "why": "One or two sentences: what could be wrong and what to check.", "risk": "high"}
   ],
-  "skim": ["Mechanical changes the reader can skip."]
+  "skim": ["Mechanical changes the reader can skip."],
+  "collapse": ["e2e/**", "**/*.stories.tsx"],
+  "expand": ["src/test-utils/**"]
 }
 ```
 
@@ -57,6 +59,7 @@ Crit and Plannotator were tried for this and don't work on a phone (hover-only c
 - `focus`: 2-5 items, ordered by risk. `line` is the line number in the **new** file and must be an added or context line shown in the diff; omit it to link to the file. `path` must be in the diff or the script exits.
 - `risk`: `high` (wrong answer, data loss, security), `medium` (fragile, hard to notice when broken), `low` (worth a glance).
 - `skim`: only for changes you actually checked are mechanical.
+- `collapse` / `expand`: path globs (`**` crosses folders). Files matching `collapse` are folded until the reader ticks "Open tests, stories & config"; `expand` keeps a file open. Derive them from the project's own config, not from guesses.
 
 Do not pad `focus` to look thorough. If nothing is risky, say so in `summary` and leave `focus` out.
 

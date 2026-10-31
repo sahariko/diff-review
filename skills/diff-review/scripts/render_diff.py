@@ -7,7 +7,9 @@ notes.json (all keys optional):
   {"summary": ["paragraph", ...],
    "focus":   [{"path": "src/x.ts", "line": 40, "title": "short", "why": "one or two sentences",
                 "risk": "high|medium|low"}],
-   "skim":    ["what is mechanical and safe to skim", ...]}
+   "skim":    ["what is mechanical and safe to skim", ...],
+   "collapse": ["e2e/**", "**/*.stories.tsx"],   # globs for files to fold by default (project-specific)
+   "expand":   ["src/test-utils/**"]}            # globs to keep open despite the defaults
 
 shots DIR holds <label>.before.png and/or <label>.after.png (png/jpg/webp).
 """
@@ -131,8 +133,46 @@ def rows_for(fi, h):
     return out, uni
 
 
+QUIET_DIRS = {"e2e", "cypress", "playwright", "__e2e__"}
+QUIET_NAME_PARTS = ("test", ".spec.", ".e2e.", ".story.", ".stories.", ".cy.")
+
+
+def glob_re(g):
+    """Translate a path glob (** crosses folders, * and ? stay inside one) to a regex."""
+    out, i = "", 0
+    while i < len(g):
+        if g.startswith("**/", i):
+            out += "(?:.*/)?"; i += 3
+        elif g.startswith("**", i):
+            out += ".*"; i += 2
+        elif g[i] == "*":
+            out += "[^/]*"; i += 1
+        elif g[i] == "?":
+            out += "[^/]"; i += 1
+        else:
+            out += re.escape(g[i]); i += 1
+    return re.compile(out + r"\Z")
+
+
+def matches_any(path, globs):
+    return any(glob_re(g).match(path) for g in globs)
+
+
+def is_quiet(path):
+    """Collapsed by default. notes.json `expand`/`collapse` (set per project) win over the built-in guesses."""
+    if matches_any(path, notes.get("expand", [])):
+        return False
+    if matches_any(path, notes.get("collapse", [])):
+        return True
+    parts = path.split("/")
+    name = parts[-1]
+    return (any(p in name for p in QUIET_NAME_PARTS)
+            or any(d.lower() in QUIET_DIRS for d in parts[:-1])
+            or path.endswith(("package.json", "README.md", ".lock", "lock.yaml")))
+
+
 def render_file(pre, i, f):
-    quiet = "test" in f["path"].split("/")[-1] or f["path"].endswith(("package.json", "README.md", ".lock", "lock.yaml"))
+    quiet = is_quiet(f["path"])
     d, _, name = f["path"].rpartition("/")
     unified, split = [], []
     for h in f["hunks"]:
@@ -308,7 +348,7 @@ page = f"""<title>{e(repo_name)} · {e(branch_name)}</title>
 {title_html}
 {scope_bar}
 <div class="totals">{totals}
-<label class="toggle"><input type="checkbox" id="quiet-toggle"> Open tests &amp; config</label></div></header>
+<label class="toggle"><input type="checkbox" id="quiet-toggle"> Open tests, stories &amp; config</label></div></header>
 {toc_html}
 <main>
 
