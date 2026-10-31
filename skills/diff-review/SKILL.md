@@ -73,19 +73,20 @@ Bundled tools (run from the repo root, with `bash` / `node`):
 |---|---|
 | `scripts/preflight.sh` | Reports package manager, Storybook, dev script, Playwright, Chromium, busy ports. Run it first. |
 | `scripts/shoot.cjs` | One screenshot of a URL or element: `--url --out [--width 390 --height 780 --wait ms --click role:button:Name --click css:.x --selector CSS --full]`. Finds the repo's own Playwright. |
+| `scripts/serve.sh` | Runs a long-lived server so it cannot be orphaned: `run --cmd "<cmd with {port}>" [--ready-path /index.json] -- <job>` starts it on a free port, runs the job with `SERVER_URL` set, then stops it; `start --cmd …` keeps it up for several calls (prints `SERVER_PID`, stops when the session ends) and `stop <pid>` ends it early. |
 | `scripts/base-worktree.sh` | `<repo> <base> <dir>` checks out the before commit with `node_modules` linked and `.env` copied; `--remove <repo> <dir>` cleans up. |
 
 If preflight shows Playwright or Chromium missing, install without touching the repo: `npm i --no-save playwright` then `npx playwright install chromium` (about 150 MB download; tell the user). If that is not possible, skip screenshots.
 
 Pick the source by what preflight found:
 
-1. **Storybook**: screenshot stories for the changed components at `http://localhost:<port>/iframe.html?id=<story-id>&viewMode=story`; ids come from `/index.json`. Start it on a free port with `--ci --no-open`. Other worktrees often hold 6006 with stale stories, so confirm the story id you want is in the index of the server you started. A story with a play function can end on an empty screen (a dialog that closes itself); open an earlier story and use `--click` to reach the state instead.
-2. **No Storybook, but a dev server** (`dev` script, or a `run` skill if present): start it, open the route that shows the change, and capture with `shoot.cjs`. Try it before concluding it needs a database or login; skip only if the start or the page actually fails.
+1. **Storybook**: screenshot stories for the changed components at `http://localhost:<port>/iframe.html?id=<story-id>&viewMode=story`; ids come from `/index.json`. Start it through `serve.sh` with the repo's package manager, e.g. `serve.sh start --cmd "pnpm exec storybook dev -p {port} --ci --no-open" --ready-path /index.json`; never start it directly. Other worktrees often hold 6006 with stale stories, so confirm the story id you want is in the index of the server you started. A story with a play function can end on an empty screen (a dialog that closes itself); open an earlier story and use `--click` to reach the state instead.
+2. **No Storybook, but a dev server** (`dev` script, or a `run` skill if present): start it through `serve.sh` (`--cmd` with `{port}` in the dev script's port flag), open the route that shows the change, and capture with `shoot.cjs`. Try it before concluding it needs a database or login; skip only if the start or the page actually fails.
 3. **Neither works** (you tried): skip screenshots and put the failure in the reply's Screenshots line. Never use a placeholder image.
 
 For a **before** image, make a base worktree, start the same source from it, capture, then remove it. A new view has no before; leave that side out.
 
-Stop every server you started, by PID. Never `pkill -f` a pattern: it can match your own shell or someone else's server.
+Start every server through `serve.sh`, never directly or with a bare `&`: it runs the whole process tree (npm, sh, node) as one group that is stopped together, so no orphan outlives the review. With `start`, call `serve.sh stop <SERVER_PID>` when you are done; the session ending is only the backstop. Never `pkill -f` a pattern: it can match your own shell or someone else's server.
 
 ## Page behavior
 

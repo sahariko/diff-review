@@ -74,4 +74,17 @@ t=$(title_for --range main..HEAD --title "$(printf 'word %.0s' $(seq 1 40))")
 [ "${#t}" -le 82 ]                                               # 80 characters, 82 bytes in a C locale
 case "$t" in *"word…") ;; *) echo "FAIL: not cut at a word: $t"; exit 1 ;; esac
 grep -q '<h1 title="word word' title.html                        # the full text stays reachable
+# serve.sh: the server answers inside `run`, the job's status passes through, nothing is left listening
+serve="$here/skills/diff-review/scripts/serve.sh"
+set +e
+bash "$serve" run --cmd "python3 -m http.server {port}" -- bash -c 'curl -sf "$SERVER_URL/" >/dev/null && echo "$SERVER_URL" > url.txt; exit 7'
+[ "$?" -eq 7 ] || { echo "FAIL: serve.sh run did not return the job status"; exit 1; }
+set -e
+[ -s url.txt ]                                                   # the job reached the server
+! curl -s -o /dev/null --max-time 2 "$(cat url.txt)"             # and it is gone afterwards
+out=$(bash "$serve" start --cmd "python3 -m http.server {port}" --watch-pid $$)
+curl -sf "$(echo "$out" | sed -n 's/^SERVER_URL=//p')/" >/dev/null
+bash "$serve" stop "$(echo "$out" | sed -n 's/^SERVER_PID=//p')"
+sleep 1
+! curl -s -o /dev/null --max-time 2 "$(echo "$out" | sed -n 's/^SERVER_URL=//p')"
 echo "ok"

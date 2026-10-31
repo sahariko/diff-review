@@ -9,6 +9,7 @@ skills/diff-review/
     preflight.sh        what the repo offers for screenshots
     shoot.cjs           one Playwright screenshot of a URL or element
     base-worktree.sh    check out the "before" commit, clean up afterwards
+    serve.sh            run Storybook or a dev server so it is always stopped
     open.sh             open a file in the default browser (WSL, Linux, macOS)
     default-range.sh    the default range to review
 ```
