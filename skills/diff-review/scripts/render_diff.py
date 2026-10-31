@@ -11,6 +11,9 @@ notes.json (all keys optional):
    "collapse": ["e2e/**", "**/*.stories.tsx"],   # globs for files to fold by default (project-specific)
    "expand":   ["src/test-utils/**"]}            # globs to keep open despite the defaults
 
+<repo>/.diff-review.json (optional, commit it) takes the same "collapse" and "expand" keys; notes.json
+values are added to it, and "expand" still beats "collapse".
+
 shots DIR holds <label>.before.png and/or <label>.after.png (png/jpg/webp).
 """
 import argparse
@@ -159,10 +162,11 @@ def matches_any(path, globs):
 
 
 def is_quiet(path):
-    """Collapsed by default. notes.json `expand`/`collapse` (set per project) win over the built-in guesses."""
-    if matches_any(path, notes.get("expand", [])):
+    """Collapsed by default. `expand`/`collapse` globs (from .diff-review.json and notes.json, added
+    together) win over the built-in guesses; `expand` wins over `collapse`."""
+    if matches_any(path, glob_lists("expand")):
         return False
-    if matches_any(path, notes.get("collapse", [])):
+    if matches_any(path, glob_lists("collapse")):
         return True
     parts = path.split("/")
     name = parts[-1]
@@ -191,6 +195,31 @@ def render_file(pre, i, f):
 
 # ---- review notes ---------------------------------------------------------
 notes = json.load(open(args.notes)) if args.notes else {}
+
+
+def load_repo_config():
+    """<repo>/.diff-review.json: optional, committed per-repo `collapse` / `expand` globs."""
+    path = os.path.join(args.repo, ".diff-review.json")
+    if not os.path.isfile(path):
+        return {}
+    try:
+        with open(path) as fh:
+            cfg = json.load(fh)
+    except (json.JSONDecodeError, UnicodeDecodeError) as err:
+        sys.exit(f"{path}: invalid JSON ({err})")
+    if not isinstance(cfg, dict):
+        sys.exit(f"{path}: expected a JSON object")
+    for key in ("collapse", "expand"):
+        if not isinstance(cfg.get(key, []), list):
+            sys.exit(f"{path}: `{key}` must be a list of globs")
+    return cfg
+
+
+repo_config = load_repo_config()
+
+
+def glob_lists(key):
+    return list(repo_config.get(key, [])) + list(notes.get(key, []))
 
 
 def focus_html():

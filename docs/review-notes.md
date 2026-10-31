@@ -29,6 +29,16 @@ Claude writes this JSON after reading the diff. `render_diff.py` turns it into t
 | `collapse` | Path globs (`**` crosses folders) to fold by default, taken from the project's test, e2e and story config. Adds to the built-in name guesses. |
 | `expand` | Path globs to keep open even if a guess or `collapse` would fold them. |
 
+### Per-repo `.diff-review.json`
+
+A repo can commit `.diff-review.json` at its root (the `--repo` directory) with the same `collapse` and `expand` keys, so those files fold on every review page, including runs with no `notes.json`:
+
+```json
+{ "collapse": ["e2e/**", "**/*.stories.tsx"], "expand": ["src/test-utils/**"] }
+```
+
+The file is optional; invalid JSON stops the renderer with a message naming the file. Precedence: built-in name guesses, then `.diff-review.json`, then `notes.json` (its globs are added to the file's), and `expand` wins over `collapse` across all of them. No other keys are read.
+
 Every key is optional. With no notes, the page has just the contents, screenshots and diff.
 
 See [`examples/notes.json`](../examples/notes.json).

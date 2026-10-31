@@ -80,6 +80,16 @@ Side-by-side diffs and a sticky contents sidebar that lists every section and fi
 
 ![Side-by-side diff with the file list in the sidebar](docs/screenshots/desktop-diff.png)
 
+### Quiet files stay folded
+
+Test, story, e2e, lockfile and README changes start collapsed. To fold your project's own noise (generated code, e2e folders, stories), commit a `.diff-review.json` at the repo root:
+
+```json
+{ "collapse": ["e2e/**", "**/*.stories.tsx"], "expand": ["src/test-utils/**"] }
+```
+
+It applies to every review page, with or without review notes. See [review notes](docs/review-notes.md#per-repo-diff-reviewjson).
+
 ### Local and remote
 
 | | Local | Remote |

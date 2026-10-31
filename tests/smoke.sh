@@ -40,6 +40,20 @@ git reset -q --hard HEAD
 printf '{"focus":[{"path":"nope.txt","title":"t","why":"w"}]}' > bad.json
 if python3 "$render" --repo . --range HEAD~1..HEAD --out bad.html --notes bad.json 2>/dev/null; then
   echo "FAIL: unknown focus path was accepted"; exit 1; fi
+# .diff-review.json: repo-level collapse/expand globs, no --notes needed; notes add to them; expand wins
+mkdir e2e && printf 'e\n' > e2e/a.spec.ts && printf 'e\n' > e2e/helper.ts && printf 'g\n' > gen.out && printf 'o\n' > other.txt
+git add -A && git commit -qm "cfg files"
+quiet_of() { python3 -c 'import re,sys; h=open(sys.argv[1]).read(); print(re.search(r"data-quiet=\"(\d)\"[^>]*>\s*<summary>(?:(?!</summary>).)*?<b>"+re.escape(sys.argv[2])+"<", h, re.S).group(1))' "$1" "$2"; }
+printf '{"collapse":["e2e/**","*.out"]}' > .diff-review.json
+python3 "$render" --repo . --range HEAD~1..HEAD --out cfg.html
+[ "$(quiet_of cfg.html helper.ts)" = 1 ] && [ "$(quiet_of cfg.html gen.out)" = 1 ] && [ "$(quiet_of cfg.html other.txt)" = 0 ]
+printf '{"collapse":["other.txt"],"expand":["e2e/helper.ts"]}' > cn.json
+python3 "$render" --repo . --range HEAD~1..HEAD --out cfg2.html --notes cn.json
+[ "$(quiet_of cfg2.html other.txt)" = 1 ] && [ "$(quiet_of cfg2.html helper.ts)" = 0 ] && [ "$(quiet_of cfg2.html gen.out)" = 1 ]
+printf '{bad' > .diff-review.json
+if python3 "$render" --repo . --range HEAD~1..HEAD --out cfg3.html 2>err.txt; then echo "FAIL: bad .diff-review.json accepted"; exit 1; fi
+grep -q '.diff-review.json' err.txt
+rm .diff-review.json cn.json
 bash "$here/skills/diff-review/scripts/preflight.sh" >/dev/null
 # default range: whole branch off main, last commit on main
 dr="$here/skills/diff-review/scripts/default-range.sh"
