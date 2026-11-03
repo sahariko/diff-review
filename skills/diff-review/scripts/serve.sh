@@ -81,8 +81,8 @@ start_process() {
   [ -z "$PRE" ] || bash -c "$PRE" >/dev/null
   PORT=$(python3 -c 'import socket; s = socket.socket(); s.bind(("", 0)); print(s.getsockname()[1])')
   LOG=$(mktemp -t serve.XXXXXX.log)
-  # setsid makes the process its own group leader, so $PGID is also its pid.
-  setsid bash -c "exec ${CMD//\{port\}/$PORT}" >"$LOG" 2>&1 &
+  # Own session (python's os.setsid, since macOS has no setsid binary) makes the process its own group leader, so $PGID is also its pid.
+  python3 -c 'import os, sys; os.setsid(); os.execvp("bash", ["bash", "-c", sys.argv[1]])' "exec ${CMD//\{port\}/$PORT}" >"$LOG" 2>&1 &
   PGID=$!
   URL="http://localhost:$PORT"
 
