@@ -291,14 +291,19 @@ def side_file(key, pre, i, f):
             f'<span class="stat"><i class="a">+{f["add"]}</i> <i class="d">−{f["del"]}</i></span></a>')
 
 
+VIEW_TOGGLE = ('<div class="view-toggle" role="group" aria-label="Diff layout">'
+               '<button type="button" data-view="unified">Unified</button><button type="button" data-view="split">Split</button></div>')
+HEAD = f'<div class="files-head"><h2>Files changed</h2>{VIEW_TOGGLE}</div>'
+
+
 def files_section(key, label, pre, fs):
     if not fs:
-        return (f'<section class="files-sec" id="files-{key}" data-in="{key}"><h2>Files changed</h2>'
+        return (f'<section class="files-sec" id="files-{key}" data-in="{key}">{HEAD}'
                 f'<div class="empty">No {"changes on this branch" if key == "branch" else label.lower() + " changes"}.</div></section>')
     toc = "".join(
         f'<a href="#{pre}{i}" data-target="{pre}{i}"><span>{e(f["path"])}</span><span class="stat"><i class="a">+{f["add"]}</i> <i class="d">−{f["del"]}</i></span></a>'
         for i, f in enumerate(fs))
-    return (f'<section class="files-sec" id="files-{key}" data-in="{key}"><h2>Files changed</h2><nav class="files" aria-label="Files">{toc}</nav></section>\n'
+    return (f'<section class="files-sec" id="files-{key}" data-in="{key}">{HEAD}<nav class="files" aria-label="Files">{toc}</nav></section>\n'
             + "\n".join(f'<div class="scope-file" data-in="{key}">{render_file(pre, i, f)}</div>' for i, f in enumerate(fs)))
 
 
@@ -372,7 +377,7 @@ page = f"""<title>{e(repo_name)} · {e(branch_name)}</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;600&display=swap">
 <style>{CSS}</style>
-<div class="layout" data-scope="branch">
+<div class="layout" data-scope="branch" data-view="unified">
 <header><div class="where"><span class="repo">{e(repo_name)}</span><span class="sep">/</span><span class="branch">{e(branch_name)}</span></div>
 {title_html}
 {scope_bar}

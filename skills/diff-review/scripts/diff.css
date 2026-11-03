@@ -115,7 +115,8 @@ summary:focus-visible, nav a:focus-visible, .toc a:focus-visible, .jump:focus-vi
     font: 12px var(--mono); color: var(--fg); text-decoration: none; box-shadow: inset 2px 0 0 transparent; }
   .toc-files a span:first-child { min-width: 0; overflow-wrap: anywhere; }
   .files-sec nav.files { display: none; }
-  .view-unified { display: none; } .view-split { display: block; }
+  .layout[data-view="split"] .view-unified { display: none; } .layout[data-view="split"] .view-split { display: block; }
+  .files-head .view-toggle { display: inline-flex; }
   .visual { max-width: 960px; }
   .figs { grid-template-columns: 1fr 1fr; }
   .shot .tabs { display: none; }
@@ -125,7 +126,13 @@ summary:focus-visible, nav a:focus-visible, .toc a:focus-visible, .jump:focus-vi
 @media (prefers-reduced-motion: reduce) { .flash { animation: none; } }
 
 section[id] { scroll-margin-top: 12px; }
-.files-sec > h2 { margin: 4px 0 8px; }
+.files-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin: 4px 0 8px; }
+.files-head h2 { margin: 0; }
+.view-toggle { display: none; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+.view-toggle button { font: 600 13px var(--sans); background: var(--surface); color: var(--fg); border: 0; border-left: 1px solid var(--line); padding: 6px 12px; cursor: pointer; }
+.view-toggle button:first-child { border-left: 0; }
+.view-toggle button[aria-pressed="true"] { background: var(--accent); color: var(--accent-fg); }
+.view-toggle button:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
 
 /* Scope selector: every scope is in the page; the layout's data-scope decides which one shows. */
 .scope { display: inline-flex; align-self: flex-start; max-width: 100%; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; margin-top: 4px; }

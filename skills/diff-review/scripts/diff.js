@@ -33,6 +33,21 @@
       window.scrollTo(0, 0);
     });
   });
+  // Unified/split layout: one choice for every file, remembered across reloads. Split only shows at 900px+ (see CSS).
+  function setView(v) {
+    layout.setAttribute("data-view", v);
+    document.querySelectorAll(".view-toggle button").forEach(function (x) { x.setAttribute("aria-pressed", String(x.getAttribute("data-view") === v)); });
+  }
+  var saved = null;
+  try { saved = localStorage.getItem("diff-review-view"); } catch (e) {}
+  setView(saved === "split" ? "split" : "unified");
+  document.querySelectorAll(".view-toggle button").forEach(function (b) {
+    b.addEventListener("click", function () {
+      var v = b.getAttribute("data-view");
+      setView(v);
+      try { localStorage.setItem("diff-review-view", v); } catch (e) {}
+    });
+  });
   var toggle = document.getElementById("quiet-toggle");
   if (toggle) toggle.addEventListener("change", function () {
     document.querySelectorAll('details[data-quiet="1"]').forEach(function (d) { d.open = toggle.checked; });

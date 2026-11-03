@@ -5,7 +5,7 @@ description: Use when the user wants to review code changes in a readable page i
 
 # Diff Review
 
-Builds a self-contained HTML page for reviewing a git diff: a table of contents, a short guide to the change, before/after screenshots when the UI changed, and the diff itself. One column with unified diffs on a phone, side-by-side at 900px and wider.
+Builds a self-contained HTML page for reviewing a git diff: a table of contents, a short guide to the change, before/after screenshots when the UI changed, and the diff itself. One column with unified diffs on a phone, a Unified/Split toggle at 900px and wider (unified is the default).
 
 Crit and Plannotator were tried for this and don't work on a phone (hover-only comment buttons, localhost-only server). This page is read-only; the user sends feedback in chat.
 

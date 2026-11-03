@@ -13,7 +13,7 @@ A 500-line diff in a terminal is hard to read, and on a phone it's worse. `diff-
 
 - **A guide to the change.** A short summary, a "look closely" list ranked by risk, and a "safe to skim" list.
 - **Before/after screenshots** when the change affects how something looks.
-- **A diff made for reading.** Wrapped lines on a phone, side by side on a wide screen, collapsible files.
+- **A diff made for reading.** Wrapped lines on a phone, unified or side by side on a wide screen (a toggle remembers your pick), collapsible files.
 
 Everything is generated from the real diff, in any git repo.
 
@@ -76,7 +76,7 @@ One column, wrapped lines, a row of jump links under the title and a back-to-top
 
 ### Built for big screens
 
-Side-by-side diffs and a sticky contents sidebar that lists every section and file and highlights the one you're reading.
+Unified by default; flip to side-by-side with the toggle above the files (remembered across reloads), plus a sticky contents sidebar that lists every section and file and highlights the one you're reading.
 
 ![Side-by-side diff with the file list in the sidebar](docs/screenshots/desktop-diff.png)
 
