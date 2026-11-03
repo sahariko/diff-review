@@ -40,7 +40,7 @@ h2 { font-size: 16px; margin: 0 0 8px; } h3 { font-size: 13px; margin: 14px 0 6p
 
 section.guide, section.visual, nav.files { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; }
 section.guide, section.visual { padding: 14px; }
-.guide p { margin: 0 0 10px; max-width: 68ch; } .guide ul { margin: 0; padding-left: 18px; color: var(--muted); }
+.guide p { margin: 0 0 10px; } .guide ul { margin: 0; padding-left: 18px; color: var(--muted); }
 .focus { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
 .focus p { margin: 4px 0 0; color: var(--muted); font-size: 14px; }
 .jump { display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: baseline; color: var(--fg); text-decoration: none; }
@@ -116,7 +116,7 @@ summary:focus-visible, nav a:focus-visible, .toc a:focus-visible, .jump:focus-vi
   .toc-files a span:first-child { min-width: 0; overflow-wrap: anywhere; }
   .files-sec nav.files { display: none; }
   .view-unified { display: none; } .view-split { display: block; }
-  .guide, .visual { max-width: 960px; }
+  .visual { max-width: 960px; }
   .figs { grid-template-columns: 1fr 1fr; }
   .shot .tabs { display: none; }
   .shot[data-show] figure { display: block !important; }
