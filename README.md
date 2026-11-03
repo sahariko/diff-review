@@ -90,6 +90,10 @@ Test, story, e2e, lockfile and README changes start collapsed. To fold your proj
 
 It applies to every review page, with or without review notes. See [review notes](docs/review-notes.md#per-repo-diff-reviewjson).
 
+### Syntax highlighting
+
+Code in the diff is colored by file type (keywords, strings, numbers, functions, types, comments) with [highlight.js](https://highlightjs.org), bundled into the page, so it works offline. Add and delete backgrounds stay. Each line is highlighted on its own, so a multi-line string or block comment can be colored wrong past its first line. Unknown file types stay plain. Files are highlighted when opened, so large diffs load fast.
+
 ### Local and remote
 
 | | Local | Remote |

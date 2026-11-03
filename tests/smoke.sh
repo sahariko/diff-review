@@ -36,6 +36,8 @@ assert "STAGED" in uncommitted and "WORK" in uncommitted                  # unco
 assert "No committed changes" not in h and "No uncommitted changes" not in h
 PY
 git reset -q --hard HEAD
+# syntax highlighting: highlight.js is inlined (offline) and each file carries its language
+grep -q 'Highlight.js v' out.html && grep -q 'data-lang="txt"' out.html
 # a focus item pointing outside the diff must fail loudly
 printf '{"focus":[{"path":"nope.txt","title":"t","why":"w"}]}' > bad.json
 if python3 "$render" --repo . --range HEAD~1..HEAD --out bad.html --notes bad.json 2>/dev/null; then

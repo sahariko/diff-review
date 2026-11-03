@@ -75,4 +75,22 @@
   }
   window.addEventListener("scroll", function () { if (!ticking) { ticking = true; requestAnimationFrame(mark); } }, { passive: true });
   mark();
+  // Syntax highlighting (highlight.js, inlined). Per line, only for files that are open, so big diffs load fast.
+  // shortcut: a line is highlighted alone, so multi-line strings and block comments are not tracked across lines.
+  var cache = {};
+  function highlightFile(d) {
+    var lang = d.getAttribute("data-lang");
+    if (d.hasAttribute("data-hl") || !window.hljs || !hljs.getLanguage(lang)) return;
+    d.setAttribute("data-hl", "");
+    d.querySelectorAll("code").forEach(function (c) {
+      var t = c.textContent, k = lang + "\n" + t;
+      if (!t.trim()) return;
+      if (!(k in cache)) cache[k] = hljs.highlight(t, { language: lang, ignoreIllegals: true }).value;
+      c.innerHTML = cache[k];
+    });
+  }
+  document.querySelectorAll("details.file").forEach(function (d) {
+    if (d.open) highlightFile(d);
+    d.addEventListener("toggle", function () { if (d.open) highlightFile(d); });
+  });
 })();

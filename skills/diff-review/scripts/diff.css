@@ -146,3 +146,11 @@ section[id] { scroll-margin-top: 12px; }
 .scope-hint { margin: 0; font-size: 13px; color: var(--muted); max-width: 68ch; } .scope-hint code { font: 12px var(--mono); }
 .scope-file { display: contents; }
 .empty { border: 1px dashed var(--line); border-radius: 8px; padding: 24px; text-align: center; color: var(--muted); }
+
+/* Syntax tokens (highlight.js classes); light-dark() follows the color-scheme each theme block already sets. */
+.hljs-keyword, .hljs-literal, .hljs-selector-tag { color: light-dark(#a626a4, #d19cf5); }
+.hljs-string, .hljs-regexp, .hljs-meta .hljs-string { color: light-dark(#0b6e2e, #a5d6a7); }
+.hljs-number, .hljs-symbol, .hljs-attr { color: light-dark(#b45309, #f0b872); }
+.hljs-title.function_, .hljs-function .hljs-title, .hljs-built_in { color: light-dark(#1d4ed8, #8ab4f8); }
+.hljs-title.class_, .hljs-type, .hljs-title { color: light-dark(#0e7490, #6fd3e0); }
+.hljs-comment, .hljs-quote { color: light-dark(#6b7280, #7f8b84); font-style: italic; }

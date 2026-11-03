@@ -187,7 +187,8 @@ def render_file(pre, i, f):
     body = "binary file" if f["binary"] and not f["hunks"] else (
         f'<div class="view-unified">{"".join(unified)}</div><div class="view-split">{"".join(split)}</div>')
     badge = f'<em class="st {f["status"]}">{f["status"]}</em>' if f["status"] != "modified" else ""
-    return f"""<details class="file" id="{pre}{i}" data-quiet="{int(quiet)}"{"" if quiet else " open"}>
+    lang = name.rpartition(".")[2].lower() if "." in name else ""
+    return f"""<details class="file" id="{pre}{i}" data-quiet="{int(quiet)}" data-lang="{e(lang)}"{"" if quiet else " open"}>
 <summary><span class="fname"><span class="dir">{e(d + "/") if d else ""}</span><b>{e(name)}</b>{badge}</span>
 <span class="stat"><i class="a">+{f["add"]}</i> <i class="d">−{f["del"]}</i></span></summary>
 <div class="code">{body}</div></details>"""
@@ -372,6 +373,8 @@ totals = "".join(totals_html(k, scope_files[k]) for k, _, _, _ in SCOPES)
 
 CSS = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "diff.css")).read()
 JS = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "diff.js")).read()
+# highlight.js (BSD-3, see highlight.LICENSE) is inlined so the page stays one offline file.
+HLJS = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "highlight.min.js")).read()
 
 page = f"""<title>{e(repo_name)} · {e(branch_name)}</title>
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -392,6 +395,7 @@ page = f"""<title>{e(repo_name)} · {e(branch_name)}</title>
 </main>
 </div>
 <button type="button" id="to-top" class="to-top" aria-label="Back to top" hidden>↑ Top</button>
+<script>{HLJS}</script>
 <script>{JS}</script>
 """
 if args.standalone:
